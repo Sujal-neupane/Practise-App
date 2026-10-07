@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:practise_app/common/theme/app_colors.dart';
 import 'package:practise_app/common/widgets/food_logo.dart';
+import 'package:practise_app/features/onboard/ui/onboard_screen.dart';
 import 'package:practise_app/features/splash/ui/widgets/splash_rays_painter.dart';
 
 class SplashScreen extends StatefulWidget {
   final VoidCallback? onAnimationComplete;
 
-  const SplashScreen({
-    super.key,
-    this.onAnimationComplete,
-  });
+  const SplashScreen({super.key, this.onAnimationComplete});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -75,9 +73,22 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    _controller.addStatusListener((status) {
+    _controller.addStatusListener((status) async {
       if (status == AnimationStatus.completed) {
-        widget.onAnimationComplete?.call();
+        if (widget.onAnimationComplete != null) {
+          widget.onAnimationComplete!();
+        } else {
+          await Future.delayed(const Duration(milliseconds: 600));
+          if (!mounted) return;
+          Navigator.of(context).pushReplacement(
+            PageRouteBuilder(
+              pageBuilder: (_, __, ___) => const OnboardScreen(),
+              transitionsBuilder: (_, animation, __, child) =>
+                  FadeTransition(opacity: animation, child: child),
+              transitionDuration: const Duration(milliseconds: 400),
+            ),
+          );
+        }
       }
     });
 
