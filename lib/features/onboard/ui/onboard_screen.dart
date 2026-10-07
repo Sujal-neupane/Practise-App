@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:practise_app/common/config/routes.dart';
 import 'package:practise_app/common/theme/app_colors.dart';
 import 'package:practise_app/features/onboard/ui/onboarding_screen1.dart';
 import 'package:practise_app/features/onboard/ui/onboarding_screen2.dart';
@@ -34,13 +35,8 @@ class _OnboardScreenState extends State<OnboardScreen> {
         curve: Curves.easeInOutCubic,
       );
     } else {
-      // Completed onboarding
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Welcome to Practise App! Ready for Auth / Home.'),
-          backgroundColor: AppColors.primary,
-        ),
-      );
+      // Completed onboarding -> Navigate to Dashboard
+      Navigator.of(context).pushReplacementNamed(AppRoutes.dashboard);
     }
   }
 

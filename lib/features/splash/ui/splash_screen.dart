@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:practise_app/common/config/routes.dart';
 import 'package:practise_app/common/theme/app_colors.dart';
 import 'package:practise_app/common/widgets/food_logo.dart';
-import 'package:practise_app/features/onboard/ui/onboard_screen.dart';
 import 'package:practise_app/features/splash/ui/widgets/splash_rays_painter.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -73,22 +73,13 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    _controller.addStatusListener((status) async {
-      if (status == AnimationStatus.completed) {
-        if (widget.onAnimationComplete != null) {
-          widget.onAnimationComplete!();
-        } else {
-          await Future.delayed(const Duration(milliseconds: 600));
-          if (!mounted) return;
-          Navigator.of(context).pushReplacement(
-            PageRouteBuilder(
-              pageBuilder: (_, __, ___) => const OnboardScreen(),
-              transitionsBuilder: (_, animation, __, child) =>
-                  FadeTransition(opacity: animation, child: child),
-              transitionDuration: const Duration(milliseconds: 400),
-            ),
-          );
-        }
+    // Navigate to Onboarding automatically after 5 seconds
+    Future.delayed(const Duration(seconds: 5), () {
+      if (!mounted) return;
+      if (widget.onAnimationComplete != null) {
+        widget.onAnimationComplete!();
+      } else {
+        Navigator.of(context).pushReplacementNamed(AppRoutes.onboard);
       }
     });
 
