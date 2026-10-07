@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:practise_app/common/config/routes.dart';
 import 'package:practise_app/common/theme/app_colors.dart';
 import 'package:practise_app/common/widgets/food_logo.dart';
@@ -16,6 +18,8 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  Timer? _timer;
+  bool _hasNavigated = false;
 
   // 1. Logo entrance (fade & subtle scale)
   late final Animation<double> _logoScale;
@@ -73,21 +77,28 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    // Navigate to Onboarding automatically after 5 seconds
-    Future.delayed(const Duration(seconds: 5), () {
-      if (!mounted) return;
-      if (widget.onAnimationComplete != null) {
-        widget.onAnimationComplete!();
-      } else {
-        Navigator.of(context).pushReplacementNamed(AppRoutes.onboard);
-      }
-    });
+    // UX Law: Predictability & Feedback
+    // Automatically transition to Onboarding after 5 seconds
+    _timer = Timer(const Duration(seconds: 5), _navigateToOnboard);
 
     _controller.forward();
   }
 
+  void _navigateToOnboard() {
+    if (_hasNavigated || !mounted) return;
+    _hasNavigated = true;
+    _timer?.cancel();
+
+    if (widget.onAnimationComplete != null) {
+      widget.onAnimationComplete!();
+    } else {
+      Navigator.of(context).pushReplacementNamed(AppRoutes.onboard);
+    }
+  }
+
   @override
   void dispose() {
+    _timer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -101,77 +112,81 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // -------------------------------------------------------------
-          // 1. CORNER FAN RAYS (Top-Left Grey, Bottom-Right Orange)
-          // -------------------------------------------------------------
-          AnimatedBuilder(
-            animation: _raysProgress,
-            builder: (context, _) {
-              return CustomPaint(
-                size: screenSize,
-                painter: SplashRaysPainter(
-                  progress: _raysProgress.value,
-                  orangeColor: AppColors.splashRaysOrange,
-                  greyColor: AppColors.splashRaysGrey,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.dark.copyWith(
+        statusBarColor: Colors.transparent,
+      ),
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        // UX Law: User Control & Freedom (allow tapping to skip splash)
+        body: GestureDetector(
+          onTap: _navigateToOnboard,
+          behavior: HitTestBehavior.opaque,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // 1. CORNER FAN RAYS (Top-Left Grey, Bottom-Right Orange)
+              AnimatedBuilder(
+                animation: _raysProgress,
+                builder: (context, _) {
+                  return CustomPaint(
+                    size: screenSize,
+                    painter: SplashRaysPainter(
+                      progress: _raysProgress.value,
+                      orangeColor: AppColors.splashRaysOrange,
+                      greyColor: AppColors.splashRaysGrey,
+                    ),
+                  );
+                },
+              ),
+
+              // 2. FOOD LOGO WITH ANIMATED CLOCHE LIFT
+              Center(
+                child: AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, _) {
+                    return Opacity(
+                      opacity: _logoOpacity.value,
+                      child: Transform.scale(
+                        scale: _logoScale.value,
+                        child: FoodLogo(
+                          width: 195,
+                          clocheLift: _clocheLift.value,
+                          oPop: _oPop.value,
+                        ),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
+              ),
 
-          // -------------------------------------------------------------
-          // 2. FOOD LOGO WITH ANIMATED CLOCHE LIFT
-          // -------------------------------------------------------------
-          Center(
-            child: AnimatedBuilder(
-              animation: _controller,
-              builder: (context, _) {
-                return Opacity(
-                  opacity: _logoOpacity.value,
-                  child: Transform.scale(
-                    scale: _logoScale.value,
-                    child: FoodLogo(
-                      width: 195,
-                      clocheLift: _clocheLift.value,
-                      oPop: _oPop.value,
-                    ),
-                  ),
-                );
-              },
-            ),
+              // 3. REPLAY BUTTON FOR DEV PREVIEW
+              Positioned(
+                bottom: 36,
+                right: 24,
+                child: AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, child) {
+                    final isDone = _controller.isCompleted;
+                    return AnimatedOpacity(
+                      opacity: isDone ? 1.0 : 0.0,
+                      duration: const Duration(milliseconds: 250),
+                      child: IconButton.filledTonal(
+                        onPressed: isDone ? _replay : null,
+                        tooltip: 'Replay animation',
+                        icon: const Icon(Icons.replay_rounded, size: 22),
+                        style: IconButton.styleFrom(
+                          backgroundColor: AppColors.primaryLight,
+                          foregroundColor: AppColors.primary,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
-
-          // -------------------------------------------------------------
-          // 3. REPLAY BUTTON FOR DEV PREVIEW
-          // -------------------------------------------------------------
-          Positioned(
-            bottom: 36,
-            right: 24,
-            child: AnimatedBuilder(
-              animation: _controller,
-              builder: (context, _) {
-                final isDone = _controller.isCompleted;
-                return AnimatedOpacity(
-                  opacity: isDone ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 250),
-                  child: IconButton.filledTonal(
-                    onPressed: isDone ? _replay : null,
-                    tooltip: 'Replay animation',
-                    icon: const Icon(Icons.replay_rounded, size: 22),
-                    style: IconButton.styleFrom(
-                      backgroundColor: AppColors.primaryLight,
-                      foregroundColor: AppColors.primary,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
