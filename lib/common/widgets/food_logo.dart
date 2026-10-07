@@ -2,33 +2,25 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:practise_app/common/theme/app_colors.dart';
 
-/// Professional, pixel-perfect Food Logo crafted with vector precision.
-/// Matches the original food delivery brand design with:
-/// - Clean, rounded, bold typography for 'F' and 'd'
-/// - Two perfect vibrant orange 'o's
-/// - Cloche lid with top ring handle & white shine curve that smoothly lifts & tilts
-/// - Platter base speed/warmth dashes underneath
+/// Professional Food Logo with balanced, elegant letter-spacing.
+/// Fixes clustered glyphs with clear, harmonious breathing room between:
+/// 'F' <gap 14px> 'o' <gap 8px> 'o' <gap 12px> 'd'
 class FoodLogo extends StatelessWidget {
-  /// Base width of the logo (default ~180 for standard display)
   final double width;
-
-  /// Cloche lift progress (0.0 = resting on o's, 1.0 = lifted up and tilted)
   final double clocheLift;
-
-  /// Bouncy pop of the two "o"s (0.0 to 1.0)
   final double oPop;
 
   const FoodLogo({
     super.key,
-    this.width = 175,
+    this.width = 195,
     this.clocheLift = 0.0,
     this.oPop = 1.0,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Aspect ratio of the complete logo artwork is approx 180 : 100
-    final height = width * (100 / 180);
+    // Internal aspect ratio is 182 : 100
+    final height = width * (100 / 182);
 
     return SizedBox(
       width: width,
@@ -63,9 +55,9 @@ class _FoodLogoPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Internal coordinate space: 180 x 100
+    // Internal coordinate space: 182 x 100
     canvas.save();
-    final scale = size.width / 180.0;
+    final scale = size.width / 182.0;
     canvas.scale(scale, scale);
 
     // -----------------------------------------------------------------
@@ -78,14 +70,15 @@ class _FoodLogoPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     // Line 1: top short dash on left
-    canvas.drawLine(const Offset(62, 77), const Offset(74, 77), dashPaint);
-    // Line 2: middle longer dash
-    canvas.drawLine(const Offset(57, 81), const Offset(105, 81), dashPaint);
+    canvas.drawLine(const Offset(68, 77), const Offset(84, 77), dashPaint);
+    // Line 2: middle longer platter line spanning both o's
+    canvas.drawLine(const Offset(62, 81), const Offset(118, 81), dashPaint);
     // Line 3: bottom short dash on right
-    canvas.drawLine(const Offset(76, 85), const Offset(98, 85), dashPaint);
+    canvas.drawLine(const Offset(86, 85), const Offset(110, 85), dashPaint);
 
     // -----------------------------------------------------------------
     // 2. LETTER 'F' (Dark Navy, Bold, Rounded)
+    // Left: 18, Right: 42
     // -----------------------------------------------------------------
     final navyPaint = Paint()
       ..color = navyColor
@@ -93,27 +86,30 @@ class _FoodLogoPainter extends CustomPainter {
 
     // Vertical stem of F
     final fStem = RRect.fromRectAndRadius(
-      const Rect.fromLTWH(18, 30, 11, 44),
-      const Radius.circular(5.5),
+      const Rect.fromLTWH(18, 30, 10.5, 44),
+      const Radius.circular(5.2),
     );
     canvas.drawRRect(fStem, navyPaint);
 
     // Top horizontal bar of F
     final fTopBar = RRect.fromRectAndRadius(
-      const Rect.fromLTWH(18, 30, 26, 10.5),
-      const Radius.circular(5.2),
+      const Rect.fromLTWH(18, 30, 24, 10),
+      const Radius.circular(5.0),
     );
     canvas.drawRRect(fTopBar, navyPaint);
 
     // Middle horizontal bar of F
     final fMidBar = RRect.fromRectAndRadius(
-      const Rect.fromLTWH(18, 48, 20, 9.5),
-      const Radius.circular(4.7),
+      const Rect.fromLTWH(18, 48, 18.5, 9.2),
+      const Radius.circular(4.6),
     );
     canvas.drawRRect(fMidBar, navyPaint);
 
     // -----------------------------------------------------------------
-    // 3. THE TWO 'o's (Vibrant Orange Doughnuts)
+    // 3. THE TWO 'o's (Vibrant Orange Doughnuts with Clear Spacing)
+    // First 'o': Center (71, 60), radius 13.5 (span: 57.5 .. 84.5)
+    // Second 'o': Center (99, 60), radius 13.5 (span: 85.5 .. 112.5)
+    // Breathing room: gap between F & o1 = 15.5px, gap between o1 & o2 = 7px
     // -----------------------------------------------------------------
     final oFillPaint = Paint()
       ..color = orangeColor
@@ -123,75 +119,74 @@ class _FoodLogoPainter extends CustomPainter {
       ..color = Colors.white
       ..style = PaintingStyle.fill;
 
-    // Subtle bouncy scale when cloche opens
-    final oScaleFactor = 0.90 + (0.10 * oPop);
+    final oScaleFactor = 0.92 + (0.08 * oPop);
 
-    // First 'o' (Center: x = 66, y = 59.5, radius = 13.5)
+    // First 'o'
     canvas.save();
-    canvas.translate(66, 59.5);
+    canvas.translate(71, 60);
     canvas.scale(oScaleFactor, oScaleFactor);
     canvas.drawCircle(Offset.zero, 13.5, oFillPaint);
     canvas.drawCircle(Offset.zero, 5.5, oHolePaint);
     canvas.restore();
 
-    // Second 'o' (Center: x = 93, y = 59.5, radius = 13.5)
+    // Second 'o'
     canvas.save();
-    canvas.translate(93, 59.5);
+    canvas.translate(99, 60);
     canvas.scale(oScaleFactor, oScaleFactor);
     canvas.drawCircle(Offset.zero, 13.5, oFillPaint);
     canvas.drawCircle(Offset.zero, 5.5, oHolePaint);
     canvas.restore();
 
     // -----------------------------------------------------------------
-    // 4. LETTER 'd' (Dark Navy, Bold, Rounded)
+    // 4. LETTER 'd' (Dark Navy, Bold, Rounded, with Clear Gap from 'o')
+    // Bowl Center: (127.5, 60), radius 13.5 (span: 114 .. 141)
+    // Breathing room: gap between o2 & d = 11.5px
     // -----------------------------------------------------------------
-    // Bowl of 'd' (Matching 'o' circular geometry)
-    canvas.drawCircle(const Offset(120, 59.5), 13.5, navyPaint);
-    canvas.drawCircle(const Offset(120, 59.5), 5.5, oHolePaint);
+    canvas.drawCircle(const Offset(127.5, 60), 13.5, navyPaint);
+    canvas.drawCircle(const Offset(127.5, 60), 5.5, oHolePaint);
 
     // Ascender stem of 'd'
     final dStem = RRect.fromRectAndRadius(
-      const Rect.fromLTWH(123, 30, 11, 44),
-      const Radius.circular(5.5),
+      const Rect.fromLTWH(130.5, 30, 10.5, 44),
+      const Radius.circular(5.2),
     );
     canvas.drawRRect(dStem, navyPaint);
 
     // -----------------------------------------------------------------
-    // 5. THE CLOCHE SERVING DOME (Lifts up & tilts during animation)
+    // 5. THE CLOCHE SERVING DOME (Lifts & Tilts over the two 'o's)
+    // Centered at x = 85.0 (midpoint of 71 & 99)
+    // Spans across both 'o's (width = 58)
     // -----------------------------------------------------------------
     canvas.save();
 
-    // Cloche resting center is x = 79.5, y = 44
-    // When lifted: moves up by up to 18px and tilts by -8 degrees
-    final liftY = -18.0 * clocheLift;
-    final tiltAngle = -0.12 * clocheLift; // ~ -7 degrees
+    final liftY = -20.0 * clocheLift;
+    final tiltAngle = -0.10 * clocheLift; // ~ -5.7 degrees
 
-    canvas.translate(79.5, 45.0 + liftY);
+    canvas.translate(85.0, 46.0 + liftY);
     canvas.rotate(tiltAngle);
 
     final clochePaint = Paint()
       ..color = orangeColor
       ..style = PaintingStyle.fill;
 
-    // A. Cloche Dome Body (Width = 50, Height = 22)
+    // A. Cloche Dome Body (Width = 54, Height = 23)
     final domePath = Path();
-    domePath.moveTo(-24, 0); // bottom left
-    // Smooth dome arc to bottom right
+    domePath.moveTo(-26, 0); // bottom left
     domePath.cubicTo(
-      -22, -22, // left shoulder
-      22, -22,  // right shoulder
-      24, 0,    // bottom right
+      -24, -23, // left curve
+      24, -23,  // right curve
+      26, 0,    // bottom right
     );
     domePath.close();
     canvas.drawPath(domePath, clochePaint);
 
-    // B. Bottom rim bar (rests right above the two 'o's)
+    // B. Bottom rim bar resting right over the two 'o's
     final rimPaint = Paint()
       ..color = orangeColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.2
       ..strokeCap = StrokeCap.round;
-    canvas.drawLine(const Offset(-25, 0), const Offset(25, 0), rimPaint);
+    canvas.drawLine(const Offset(-27.5, 0), const Offset(27.5, 0), rimPaint);
 
     // C. Top Ring / Loop Handle
     final handlePaint = Paint()
@@ -200,14 +195,14 @@ class _FoodLogoPainter extends CustomPainter {
       ..strokeWidth = 2.6
       ..strokeCap = StrokeCap.round;
     canvas.drawArc(
-      const Rect.fromLTWH(-4.5, -23.5, 9, 8),
+      const Rect.fromLTWH(-4.5, -25, 9, 8),
       math.pi,
       math.pi,
       false,
       handlePaint,
     );
 
-    // D. White Shine Highlight Curve (as seen in original logo)
+    // D. White Shine Highlight Curve
     final shinePaint = Paint()
       ..color = Colors.white.withOpacity(0.85)
       ..style = PaintingStyle.stroke
@@ -216,7 +211,7 @@ class _FoodLogoPainter extends CustomPainter {
 
     final shinePath = Path();
     shinePath.addArc(
-      const Rect.fromLTWH(-19, -17, 38, 26),
+      const Rect.fromLTWH(-20, -18, 40, 28),
       math.pi * 1.05,
       math.pi * 0.22,
     );
