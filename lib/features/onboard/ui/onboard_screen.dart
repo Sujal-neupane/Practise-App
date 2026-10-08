@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:practise_app/common/config/routes.dart';
 import 'package:practise_app/common/theme/app_colors.dart';
+import 'package:practise_app/features/auth/data/session_storage.dart';
 import 'package:practise_app/features/onboard/ui/onboarding_screen1.dart';
 import 'package:practise_app/features/onboard/ui/onboarding_screen2.dart';
 import 'package:practise_app/features/onboard/ui/onboarding_screen3.dart';
@@ -28,7 +29,7 @@ class _OnboardScreenState extends State<OnboardScreen> {
     super.dispose();
   }
 
-  void _onNext() {
+  Future<void> _onNext() async {
     if (_currentPage < _pages.length - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 350),
@@ -36,6 +37,8 @@ class _OnboardScreenState extends State<OnboardScreen> {
       );
     } else {
       // Completed onboarding -> Navigate to Dashboard
+      await SessionStorage.markOnboardingCompleted();
+      if (!mounted) return;
       Navigator.of(context).pushReplacementNamed(AppRoutes.dashboard);
     }
   }
@@ -74,31 +77,31 @@ class _OnboardScreenState extends State<OnboardScreen> {
             // BOTTOM CONTROLS (Indicator Dots + Action Buttons)
             // -------------------------------------------------------------
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 20.0,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Animated Dots Indicator (matching design with 4 dots)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      4,
-                      (index) {
-                        final isActive = _currentPage == index;
-                        return AnimatedContainer(
-                          duration: const Duration(milliseconds: 250),
-                          margin: const EdgeInsets.symmetric(horizontal: 4.5),
-                          width: isActive ? 10 : 7,
-                          height: isActive ? 10 : 7,
-                          decoration: BoxDecoration(
-                            color: isActive
-                                ? AppColors.indicatorActive
-                                : AppColors.indicatorInactive,
-                            shape: BoxShape.circle,
-                          ),
-                        );
-                      },
-                    ),
+                    children: List.generate(4, (index) {
+                      final isActive = _currentPage == index;
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        margin: const EdgeInsets.symmetric(horizontal: 4.5),
+                        width: isActive ? 10 : 7,
+                        height: isActive ? 10 : 7,
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? AppColors.indicatorActive
+                              : AppColors.indicatorInactive,
+                          shape: BoxShape.circle,
+                        ),
+                      );
+                    }),
                   ),
 
                   const SizedBox(height: 32),
@@ -153,4 +156,3 @@ class _OnboardScreenState extends State<OnboardScreen> {
     );
   }
 }
-
