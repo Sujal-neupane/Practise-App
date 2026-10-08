@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 /// Creative vector illustration for Onboarding 2:
@@ -6,10 +7,7 @@ import 'package:flutter/material.dart';
 class Onboard2Illustration extends StatefulWidget {
   final double size;
 
-  const Onboard2Illustration({
-    super.key,
-    this.size = 280,
-  });
+  const Onboard2Illustration({super.key, this.size = 280});
 
   @override
   State<Onboard2Illustration> createState() => _Onboard2IllustrationState();
@@ -43,9 +41,7 @@ class _Onboard2IllustrationState extends State<Onboard2Illustration>
         return SizedBox(
           width: widget.size,
           height: widget.size,
-          child: CustomPaint(
-            painter: _Onboard2Painter(steamProgress: t),
-          ),
+          child: CustomPaint(painter: _Onboard2Painter(steamProgress: t)),
         );
       },
     );
@@ -84,7 +80,10 @@ class _Onboard2Painter extends CustomPainter {
 
     // Hat base band
     canvas.drawRRect(
-      RRect.fromRectAndRadius(const Rect.fromLTWH(112, 60, 36, 16), const Radius.circular(4)),
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(112, 60, 36, 16),
+        const Radius.circular(4),
+      ),
       hatPaint,
     );
     // Puffy hat clouds
@@ -96,9 +95,17 @@ class _Onboard2Painter extends CustomPainter {
     // 3. CHEF HEAD & BODY
     // -------------------------------------------------------------
     // Black Hair
-    canvas.drawCircle(const Offset(130, 80), 18, Paint()..color = const Color(0xFF1E293B));
+    canvas.drawCircle(
+      const Offset(130, 80),
+      18,
+      Paint()..color = const Color(0xFF1E293B),
+    );
     // Face
-    canvas.drawCircle(const Offset(130, 83), 15, Paint()..color = const Color(0xFFFDBA74));
+    canvas.drawCircle(
+      const Offset(130, 83),
+      15,
+      Paint()..color = const Color(0xFFFDBA74),
+    );
 
     // Yellow Chef Shirt / Torso
     final shirtPath = Path()
@@ -149,18 +156,27 @@ class _Onboard2Painter extends CustomPainter {
     // Counter shelf
     final counterPaint = Paint()..color = const Color(0xFFF59E0B);
     canvas.drawRRect(
-      RRect.fromRectAndRadius(const Rect.fromLTWH(45, 188, 170, 7), const Radius.circular(3.5)),
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(45, 188, 170, 7),
+        const Radius.circular(3.5),
+      ),
       counterPaint,
     );
 
     // Gas burner rings underneath
     final burnerPaint = Paint()..color = const Color(0xFF334155);
     canvas.drawRRect(
-      RRect.fromRectAndRadius(const Rect.fromLTWH(82, 182, 34, 6), const Radius.circular(2)),
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(82, 182, 34, 6),
+        const Radius.circular(2),
+      ),
       burnerPaint,
     );
     canvas.drawRRect(
-      RRect.fromRectAndRadius(const Rect.fromLTWH(138, 182, 34, 6), const Radius.circular(2)),
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(138, 182, 34, 6),
+        const Radius.circular(2),
+      ),
       burnerPaint,
     );
 
@@ -173,7 +189,10 @@ class _Onboard2Painter extends CustomPainter {
       ..close();
     canvas.drawPath(potPath, Paint()..color = const Color(0xFF1E293B));
     canvas.drawRRect(
-      RRect.fromRectAndRadius(const Rect.fromLTWH(80, 158, 38, 4.5), const Radius.circular(2)),
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(80, 158, 38, 4.5),
+        const Radius.circular(2),
+      ),
       Paint()..color = const Color(0xFF94A3B8),
     );
 
@@ -186,7 +205,10 @@ class _Onboard2Painter extends CustomPainter {
       ..close();
     canvas.drawPath(panPath, Paint()..color = const Color(0xFF64748B));
     canvas.drawRRect(
-      RRect.fromRectAndRadius(const Rect.fromLTWH(134, 169, 42, 3.5), const Radius.circular(1.5)),
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(134, 169, 42, 3.5),
+        const Radius.circular(1.5),
+      ),
       Paint()..color = const Color(0xFFCBD5E1),
     );
 
@@ -209,7 +231,7 @@ class _Onboard2Painter extends CustomPainter {
     // -------------------------------------------------------------
     final steamShift = (steamProgress * 20.0);
     final steamPaint = Paint()
-      ..color = const Color(0xFFE2E8F0).withOpacity(0.85)
+      ..color = const Color(0xFFE2E8F0).withValues(alpha: 0.85)
       ..strokeWidth = 2.2
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
@@ -239,4 +261,3 @@ class _Onboard2Painter extends CustomPainter {
   bool shouldRepaint(covariant _Onboard2Painter oldDelegate) =>
       oldDelegate.steamProgress != steamProgress;
 }
-

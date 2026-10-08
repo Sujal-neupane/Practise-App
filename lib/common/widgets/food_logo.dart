@@ -1,10 +1,10 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:practise_app/common/theme/app_colors.dart';
 
 /// Professional Food Logo with balanced, elegant letter-spacing.
 /// Fixes clustered glyphs with clear, harmonious breathing room between:
-/// 'F' <gap 14px> 'o' <gap 8px> 'o' <gap 12px> 'd'
 class FoodLogo extends StatelessWidget {
   final double width;
   final double clocheLift;
@@ -64,7 +64,7 @@ class _FoodLogoPainter extends CustomPainter {
     // 1. BASE SPEED / PLATTER DASHES UNDER 'oo'
     // -----------------------------------------------------------------
     final dashPaint = Paint()
-      ..color = accentOrange.withOpacity(0.85)
+      ..color = accentOrange.withValues(alpha: 0.85)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.4
       ..strokeCap = StrokeCap.round;
@@ -173,9 +173,12 @@ class _FoodLogoPainter extends CustomPainter {
     final domePath = Path();
     domePath.moveTo(-26, 0); // bottom left
     domePath.cubicTo(
-      -24, -23, // left curve
-      24, -23,  // right curve
-      26, 0,    // bottom right
+      -24,
+      -23, // left curve
+      24,
+      -23, // right curve
+      26,
+      0, // bottom right
     );
     domePath.close();
     canvas.drawPath(domePath, clochePaint);
@@ -204,7 +207,7 @@ class _FoodLogoPainter extends CustomPainter {
 
     // D. White Shine Highlight Curve
     final shinePaint = Paint()
-      ..color = Colors.white.withOpacity(0.85)
+      ..color = Colors.white.withValues(alpha: 0.85)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0
       ..strokeCap = StrokeCap.round;

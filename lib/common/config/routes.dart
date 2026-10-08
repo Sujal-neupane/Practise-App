@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:practise_app/features/home/ui/dashboard_screen.dart';
 import 'package:practise_app/features/onboard/ui/onboard_screen.dart';
 import 'package:practise_app/features/splash/ui/splash_screen.dart';
+import 'package:practise_app/features/auth/ui/login_screen.dart';
+import 'package:practise_app/features/auth/ui/profile_edit_screen.dart';
 
 /// Centralized Application Routing Configuration.
 class AppRoutes {
   static const String splash = '/';
   static const String onboard = '/onboard';
   static const String dashboard = '/dashboard';
+  static const String login = '/login';
+  static const String profileEdit = '/profile-edit';
 
   /// Generates routes with smooth page transitions
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
@@ -29,6 +33,12 @@ class AppRoutes {
           const DashboardScreen(),
           settings,
         );
+
+      case login:
+        return _buildPageRoute(const LoginScreen(), settings);
+
+      case profileEdit:
+        return _buildPageRoute(const ProfileEditScreen(), settings);
 
       default:
         return MaterialPageRoute(

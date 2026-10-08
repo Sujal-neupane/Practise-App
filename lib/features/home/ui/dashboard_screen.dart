@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:practise_app/common/config/routes.dart';
 import 'package:practise_app/common/theme/app_colors.dart';
 import 'package:practise_app/common/widgets/custom_bottom_nav_bar.dart';
+import 'package:practise_app/features/auth/bloc/auth_bloc.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -128,7 +131,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 child: IconButton(
                   onPressed: () {},
-                  icon: const Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 20),
+                  icon: const Icon(
+                    Icons.shopping_bag_outlined,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
               ),
             ],
@@ -168,7 +175,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: 'Search dishes, restaurants...',
-                    prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textMuted),
+                    prefixIcon: const Icon(
+                      Icons.search_rounded,
+                      color: AppColors.textMuted,
+                    ),
                     fillColor: const Color(0xFFF0F5FA),
                     filled: true,
                     contentPadding: const EdgeInsets.symmetric(vertical: 14),
@@ -237,7 +247,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     label: Text(cat['name'] as String),
                     labelStyle: TextStyle(
                       color: isSelected ? Colors.white : AppColors.textPrimary,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w600,
                       fontSize: 14,
                     ),
                     backgroundColor: Colors.white,
@@ -273,7 +285,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               borderRadius: BorderRadius.circular(18),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.25),
+                  color: AppColors.primary.withValues(alpha: 0.25),
                   blurRadius: 16,
                   offset: const Offset(0, 8),
                 ),
@@ -286,9 +298,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.25),
+                          color: Colors.white.withValues(alpha: 0.25),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Text(
@@ -327,7 +342,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -372,7 +387,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _restaurants.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 14),
+            separatorBuilder: (_, _) => const SizedBox(height: 14),
             itemBuilder: (context, index) {
               final r = _restaurants[index];
               return Container(
@@ -423,18 +438,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              const Icon(Icons.star_rounded, size: 16, color: AppColors.ratingStar),
+                              const Icon(
+                                Icons.star_rounded,
+                                size: 16,
+                                color: AppColors.ratingStar,
+                              ),
                               const SizedBox(width: 3),
                               Text(
                                 r['rating'] as String,
-                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                               const SizedBox(width: 12),
-                              const Icon(Icons.schedule_rounded, size: 14, color: AppColors.textMuted),
+                              const Icon(
+                                Icons.schedule_rounded,
+                                size: 14,
+                                color: AppColors.textMuted,
+                              ),
                               const SizedBox(width: 3),
                               Text(
                                 r['time'] as String,
-                                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
                               const SizedBox(width: 12),
                               Text(
@@ -530,12 +559,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     const Text(
                       'Order #4829',
-                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.12),
+                        color: AppColors.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: const Text(
@@ -552,13 +587,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 12),
                 const Text(
                   'Rose Garden Restaurant • 3 items',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 14,
+                  ),
                 ),
                 const SizedBox(height: 14),
                 LinearProgressIndicator(
                   value: 0.7,
                   backgroundColor: AppColors.border,
-                  valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    AppColors.primary,
+                  ),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 const SizedBox(height: 8),
@@ -578,47 +618,111 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // TAB 4: PROFILE
   // ---------------------------------------------------------------------------
   Widget _buildProfileTab() {
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        children: [
-          const CircleAvatar(
-            radius: 44,
-            backgroundColor: AppColors.primaryLight,
-            child: Icon(Icons.person_rounded, size: 48, color: AppColors.primary),
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        final user = state.user;
+        if (user == null) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.lock_outline,
+                    size: 52,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Sign in to manage your profile',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () =>
+                        Navigator.of(context).pushNamed(AppRoutes.login),
+                    child: const Text('Sign in'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            children: [
+              CircleAvatar(
+                radius: 44,
+                backgroundColor: AppColors.primaryLight,
+                child: Icon(
+                  user.photoURL == null ? Icons.person_rounded : Icons.image,
+                  size: 48,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                user.displayName ?? 'Your profile',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                user.email ?? 'No email added',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+              ),
+              const SizedBox(height: 28),
+              ListTile(
+                leading: const Icon(
+                  Icons.edit_outlined,
+                  color: AppColors.primary,
+                ),
+                title: const Text('Edit profile'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () =>
+                    Navigator.of(context).pushNamed(AppRoutes.profileEdit),
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.location_on_outlined,
+                  color: AppColors.primary,
+                ),
+                title: const Text('My Addresses'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () {},
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.payment_rounded,
+                  color: AppColors.primary,
+                ),
+                title: const Text('Payment Methods'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () {},
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.settings_outlined,
+                  color: AppColors.primary,
+                ),
+                title: const Text('Settings'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () {},
+              ),
+              const Spacer(),
+              TextButton.icon(
+                onPressed: () =>
+                    context.read<AuthBloc>().add(AuthLogoutRequested()),
+                icon: const Icon(Icons.logout_rounded),
+                label: const Text('Sign out'),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          const Text(
-            'Sujal Neupane',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'sujal@example.com',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-          ),
-          const SizedBox(height: 28),
-          ListTile(
-            leading: const Icon(Icons.location_on_outlined, color: AppColors.primary),
-            title: const Text('My Addresses'),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: const Icon(Icons.payment_rounded, color: AppColors.primary),
-            title: const Text('Payment Methods'),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: const Icon(Icons.settings_outlined, color: AppColors.primary),
-            title: const Text('Settings'),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () {},
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
-

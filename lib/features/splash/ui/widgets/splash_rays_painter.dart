@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:practise_app/common/theme/app_colors.dart';
 
@@ -27,7 +28,7 @@ class SplashRaysPainter extends CustomPainter {
     const int greyRayCount = 13;
 
     final greyPaint = Paint()
-      ..color = greyColor.withOpacity(progress * 0.70)
+      ..color = greyColor.withValues(alpha: progress * 0.70)
       ..strokeWidth = 2.4
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
@@ -77,7 +78,7 @@ class SplashRaysPainter extends CustomPainter {
       );
 
       final rayPaint = Paint()
-        ..color = orangeColor.withOpacity(progress.clamp(0.0, 1.0))
+        ..color = orangeColor.withValues(alpha: progress.clamp(0.0, 1.0))
         ..strokeWidth = 4.2
         ..strokeCap = StrokeCap.round
         ..style = PaintingStyle.stroke;

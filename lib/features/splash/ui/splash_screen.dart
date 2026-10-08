@@ -1,10 +1,12 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:practise_app/common/config/routes.dart';
 import 'package:practise_app/common/theme/app_colors.dart';
 import 'package:practise_app/common/widgets/food_logo.dart';
 import 'package:practise_app/features/splash/ui/widgets/splash_rays_painter.dart';
+import 'package:practise_app/features/auth/data/session_storage.dart';
 
 class SplashScreen extends StatefulWidget {
   final VoidCallback? onAnimationComplete;
@@ -79,12 +81,12 @@ class _SplashScreenState extends State<SplashScreen>
 
     // UX Law: Predictability & Feedback
     // Automatically transition to Onboarding after 5 seconds
-    _timer = Timer(const Duration(seconds: 5), _navigateToOnboard);
+    _timer = Timer(const Duration(seconds: 5), _navigateFromSplash);
 
     _controller.forward();
   }
 
-  void _navigateToOnboard() {
+  Future<void> _navigateFromSplash() async {
     if (_hasNavigated || !mounted) return;
     _hasNavigated = true;
     _timer?.cancel();
@@ -92,7 +94,12 @@ class _SplashScreenState extends State<SplashScreen>
     if (widget.onAnimationComplete != null) {
       widget.onAnimationComplete!();
     } else {
-      Navigator.of(context).pushReplacementNamed(AppRoutes.onboard);
+      final hasCompletedOnboarding =
+          await SessionStorage.hasCompletedOnboarding();
+      if (!mounted) return;
+      Navigator.of(context).pushReplacementNamed(
+        hasCompletedOnboarding ? AppRoutes.dashboard : AppRoutes.onboard,
+      );
     }
   }
 
@@ -120,7 +127,7 @@ class _SplashScreenState extends State<SplashScreen>
         backgroundColor: AppColors.background,
         // UX Law: User Control & Freedom (allow tapping to skip splash)
         body: GestureDetector(
-          onTap: _navigateToOnboard,
+          onTap: _navigateFromSplash,
           behavior: HitTestBehavior.opaque,
           child: Stack(
             fit: StackFit.expand,
