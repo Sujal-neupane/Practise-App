@@ -18,8 +18,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _selectedCategoryIndex = 0;
   final RestaurantRepository _restaurantRepository = RestaurantRepository();
   final List<Restaurant> _restaurants = [];
+  final ScrollController _homeScrollController = ScrollController();
+  int _nextRestaurantPage = 0;
   bool _isLoadingMore = false;
   bool _hasMoreRestaurants = true;
+  String? _restaurantError;
 
   final List<Map<String, dynamic>> _categories = const [
     {'name': 'All', 'icon': Icons.restaurant_rounded},
@@ -33,21 +36,59 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    _homeScrollController.addListener(_handleHomeScroll);
     _loadNextRestaurantPage();
+  }
+
+  @override
+  void dispose() {
+    _homeScrollController
+      ..removeListener(_handleHomeScroll)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _handleHomeScroll() {
+    if (_homeScrollController.position.extentAfter < 400) {
+      _loadNextRestaurantPage();
+    }
   }
 
   Future<void> _loadNextRestaurantPage() async {
     if (_isLoadingMore || !_hasMoreRestaurants) return;
-    setState(() => _isLoadingMore = true);
-    final page = await _restaurantRepository.fetchPage(
-      page: _restaurants.length ~/ 3,
-    );
+    setState(() {
+      _isLoadingMore = true;
+      _restaurantError = null;
+    });
+    try {
+      final page = await _restaurantRepository.fetchPage(
+        page: _nextRestaurantPage,
+      );
+      if (!mounted) return;
+      setState(() {
+        _restaurants.addAll(page.items);
+        _nextRestaurantPage++;
+        _hasMoreRestaurants = page.hasMore;
+        _isLoadingMore = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingMore = false;
+        _restaurantError = 'We could not load restaurants.';
+      });
+    }
+  }
+
+  Future<void> _refreshRestaurants() async {
     if (!mounted) return;
     setState(() {
-      _restaurants.addAll(page.items);
-      _hasMoreRestaurants = page.hasMore;
-      _isLoadingMore = false;
+      _restaurants.clear();
+      _nextRestaurantPage = 0;
+      _hasMoreRestaurants = true;
+      _restaurantError = null;
     });
+    await _loadNextRestaurantPage();
   }
 
   @override
@@ -81,419 +122,454 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // TAB 1: HOME FEED
   // ---------------------------------------------------------------------------
   Widget _buildHomeTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 1. TOP APP BAR (Location + Cart/Notification Button)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'DELIVER TO',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
-                      letterSpacing: 0.8,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: const [
-                      Text(
-                        'Halal Lab office',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      SizedBox(width: 4),
-                      Icon(Icons.keyboard_arrow_down_rounded, size: 18),
-                    ],
-                  ),
-                ],
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  color: AppColors.secondary,
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  onPressed: () {},
-                  icon: const Icon(
-                    Icons.shopping_bag_outlined,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          // 2. GREETING & HEADLINE
-          RichText(
-            text: const TextSpan(
-              style: TextStyle(fontSize: 22, height: 1.3),
+    return RefreshIndicator(
+      onRefresh: _refreshRestaurants,
+      child: SingleChildScrollView(
+        controller: _homeScrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1. TOP APP BAR (Location + Cart/Notification Button)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                TextSpan(
-                  text: 'Hey Foodie, ',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w400,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'DELIVER TO',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: const [
+                        Text(
+                          'Halal Lab office',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        SizedBox(width: 4),
+                        Icon(Icons.keyboard_arrow_down_rounded, size: 18),
+                      ],
+                    ),
+                  ],
                 ),
-                TextSpan(
-                  text: 'Good Afternoon! 🍔\n',
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.secondary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    onPressed: () {},
+                    icon: const Icon(
+                      Icons.shopping_bag_outlined,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
 
-          const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
-          // 3. SEARCH BAR
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search dishes, restaurants...',
-                    prefixIcon: const Icon(
-                      Icons.search_rounded,
-                      color: AppColors.textMuted,
+            // 2. GREETING & HEADLINE
+            RichText(
+              text: const TextSpan(
+                style: TextStyle(fontSize: 22, height: 1.3),
+                children: [
+                  TextSpan(
+                    text: 'Hey Foodie, ',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w400,
                     ),
-                    fillColor: const Color(0xFFF0F5FA),
-                    filled: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  TextSpan(
+                    text: 'Good Afternoon! 🍔\n',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // 3. SEARCH BAR
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search dishes, restaurants...',
+                      prefixIcon: const Icon(
+                        Icons.search_rounded,
+                        color: AppColors.textMuted,
+                      ),
+                      fillColor: const Color(0xFFF0F5FA),
+                      filled: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Container(
-                height: 52,
-                width: 52,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(14),
+                const SizedBox(width: 12),
+                Container(
+                  height: 52,
+                  width: 52,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(Icons.tune_rounded, color: Colors.white),
                 ),
-                child: const Icon(Icons.tune_rounded, color: Colors.white),
-              ),
-            ],
-          ),
+              ],
+            ),
 
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-          // 4. CATEGORIES
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text(
-                'All Categories',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
+            // 4. CATEGORIES
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: const [
+                Text(
+                  'All Categories',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-              ),
-              Text(
-                'See All',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
+                Text(
+                  'See All',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
+              ],
+            ),
+
+            const SizedBox(height: 14),
+
+            // Category Pills Horizontal List
+            SizedBox(
+              height: 48,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: _categories.length,
+                itemBuilder: (context, index) {
+                  final cat = _categories[index];
+                  final isSelected = _selectedCategoryIndex == index;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 10.0),
+                    child: FilterChip(
+                      selected: isSelected,
+                      showCheckmark: false,
+                      avatar: Icon(
+                        cat['icon'] as IconData,
+                        size: 18,
+                        color: isSelected
+                            ? Colors.white
+                            : AppColors.textPrimary,
+                      ),
+                      label: Text(cat['name'] as String),
+                      labelStyle: TextStyle(
+                        color: isSelected
+                            ? Colors.white
+                            : AppColors.textPrimary,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                      backgroundColor: Colors.white,
+                      selectedColor: AppColors.primary,
+                      side: BorderSide(
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.border,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      onSelected: (_) {
+                        setState(() {
+                          _selectedCategoryIndex = index;
+                        });
+                      },
+                    ),
+                  );
+                },
               ),
-            ],
-          ),
+            ),
 
-          const SizedBox(height: 14),
+            const SizedBox(height: 24),
 
-          // Category Pills Horizontal List
-          SizedBox(
-            height: 48,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _categories.length,
+            // 5. PROMO OFFER BANNER
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFF7622), Color(0xFFFFA05C)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.25),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.25),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            'LIMITED OFFER',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Get 30% OFF\non your first 3 orders',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            height: 1.25,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Use code: FOODIE30',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.fastfood_rounded,
+                      size: 34,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 28),
+
+            // 6. POPULAR RESTAURANTS
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: const [
+                Text(
+                  'Open Restaurants',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  'See All',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 14),
+
+            // Restaurant Cards List
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _restaurants.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 14),
               itemBuilder: (context, index) {
-                final cat = _categories[index];
-                final isSelected = _selectedCategoryIndex == index;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 10.0),
-                  child: FilterChip(
-                    selected: isSelected,
-                    showCheckmark: false,
-                    avatar: Icon(
-                      cat['icon'] as IconData,
-                      size: 18,
-                      color: isSelected ? Colors.white : AppColors.textPrimary,
-                    ),
-                    label: Text(cat['name'] as String),
-                    labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : AppColors.textPrimary,
-                      fontWeight: isSelected
-                          ? FontWeight.w700
-                          : FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                    backgroundColor: Colors.white,
-                    selectedColor: AppColors.primary,
-                    side: BorderSide(
-                      color: isSelected ? AppColors.primary : AppColors.border,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    onSelected: (_) {
-                      setState(() {
-                        _selectedCategoryIndex = index;
-                      });
-                    },
+                final r = _restaurants[index];
+                return Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Row(
+                    children: [
+                      // Restaurant Icon Thumbnail
+                      Container(
+                        width: 68,
+                        height: 68,
+                        decoration: BoxDecoration(
+                          color: r.color,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Icon(r.icon, size: 34, color: AppColors.primary),
+                      ),
+                      const SizedBox(width: 14),
+                      // Details
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              r.name,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              r.tag,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.star_rounded,
+                                  size: 16,
+                                  color: AppColors.ratingStar,
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  r.rating,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                const Icon(
+                                  Icons.schedule_rounded,
+                                  size: 14,
+                                  color: AppColors.textMuted,
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  r.time,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  r.delivery,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 );
               },
             ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // 5. PROMO OFFER BANNER
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFF7622), Color(0xFFFFA05C)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+            if (_restaurants.isEmpty && _isLoadingMore)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 28),
+                child: Center(child: CircularProgressIndicator()),
               ),
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.25),
-                  blurRadius: 16,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.25),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Text(
-                          'LIMITED OFFER',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Get 30% OFF\non your first 3 orders',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          height: 1.25,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        'Use code: FOODIE30',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.fastfood_rounded,
-                    size: 34,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 28),
-
-          // 6. POPULAR RESTAURANTS
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text(
-                'Open Restaurants',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              Text(
-                'See All',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 14),
-
-          // Restaurant Cards List
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _restaurants.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 14),
-            itemBuilder: (context, index) {
-              final r = _restaurants[index];
-              return Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border),
-                ),
+            if (_restaurantError != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Restaurant Icon Thumbnail
-                    Container(
-                      width: 68,
-                      height: 68,
-                      decoration: BoxDecoration(
-                        color: r.color,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Icon(r.icon, size: 34, color: AppColors.primary),
-                    ),
-                    const SizedBox(width: 14),
-                    // Details
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            r.name,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            r.tag,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.star_rounded,
-                                size: 16,
-                                color: AppColors.ratingStar,
-                              ),
-                              const SizedBox(width: 3),
-                              Text(
-                                r.rating,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              const Icon(
-                                Icons.schedule_rounded,
-                                size: 14,
-                                color: AppColors.textMuted,
-                              ),
-                              const SizedBox(width: 3),
-                              Text(
-                                r.time,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                r.delivery,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                    Flexible(child: Text(_restaurantError!)),
+                    TextButton(
+                      onPressed: _loadNextRestaurantPage,
+                      child: const Text('Retry'),
                     ),
                   ],
                 ),
-              );
-            },
-          ),
-          if (_hasMoreRestaurants || _isLoadingMore) ...[
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: _isLoadingMore ? null : _loadNextRestaurantPage,
-                icon: _isLoadingMore
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.expand_more_rounded),
-                label: Text(_isLoadingMore ? 'Loading...' : 'Load more'),
               ),
-            ),
+            if (_hasMoreRestaurants || _isLoadingMore) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _isLoadingMore ? null : _loadNextRestaurantPage,
+                  icon: _isLoadingMore
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.expand_more_rounded),
+                  label: Text(_isLoadingMore ? 'Loading...' : 'Load more'),
+                ),
+              ),
+            ],
+            if (!_hasMoreRestaurants && _restaurants.isNotEmpty)
+              const Padding(
+                padding: EdgeInsets.only(top: 16),
+                child: Center(child: Text('You are all caught up.')),
+              ),
+            const SizedBox(height: 20),
           ],
-          const SizedBox(height: 20),
-        ],
+        ),
       ),
     );
   }

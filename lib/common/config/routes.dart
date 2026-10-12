@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:practise_app/features/auth/bloc/auth_bloc.dart';
 import 'package:practise_app/features/home/ui/dashboard_screen.dart';
 import 'package:practise_app/features/onboard/ui/onboard_screen.dart';
 import 'package:practise_app/features/splash/ui/splash_screen.dart';
@@ -12,27 +14,24 @@ class AppRoutes {
   static const String dashboard = '/dashboard';
   static const String login = '/login';
   static const String profileEdit = '/profile-edit';
+  static const String authCallback = '/link';
 
   /// Generates routes with smooth page transitions
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
+    final routePath = Uri.tryParse(settings.name ?? '')?.path;
+    if (routePath == authCallback) {
+      return _buildPageRoute(const _AuthCallbackScreen(), settings);
+    }
+
     switch (settings.name) {
       case splash:
-        return _buildPageRoute(
-          const SplashScreen(),
-          settings,
-        );
+        return _buildPageRoute(const SplashScreen(), settings);
 
       case onboard:
-        return _buildPageRoute(
-          const OnboardScreen(),
-          settings,
-        );
+        return _buildPageRoute(const OnboardScreen(), settings);
 
       case dashboard:
-        return _buildPageRoute(
-          const DashboardScreen(),
-          settings,
-        );
+        return _buildPageRoute(const DashboardScreen(), settings);
 
       case login:
         return _buildPageRoute(const LoginScreen(), settings);
@@ -43,9 +42,7 @@ class AppRoutes {
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
-            body: Center(
-              child: Text('No route defined for ${settings.name}'),
-            ),
+            body: Center(child: Text('No route defined for ${settings.name}')),
           ),
         );
     }
@@ -62,10 +59,7 @@ class AppRoutes {
       pageBuilder: (context, animation, secondaryAnimation) => page,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         return FadeTransition(
-          opacity: CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeInOut,
-          ),
+          opacity: CurvedAnimation(parent: animation, curve: Curves.easeInOut),
           child: child,
         );
       },
@@ -73,3 +67,28 @@ class AppRoutes {
   }
 }
 
+class _AuthCallbackScreen extends StatelessWidget {
+  const _AuthCallbackScreen();
+
+  void _goToDashboard(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.mounted) {
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil(AppRoutes.dashboard, (route) => false);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        if (state.status == AuthStatus.authenticated) {
+          _goToDashboard(context);
+        }
+
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      },
+    );
+  }
+}
