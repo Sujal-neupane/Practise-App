@@ -4,6 +4,7 @@ import 'package:practise_app/common/config/routes.dart';
 import 'package:practise_app/common/theme/app_colors.dart';
 import 'package:practise_app/common/widgets/custom_bottom_nav_bar.dart';
 import 'package:practise_app/features/auth/bloc/auth_bloc.dart';
+import 'package:practise_app/features/home/data/restaurant_repository.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -15,6 +16,10 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentTabIndex = 0;
   int _selectedCategoryIndex = 0;
+  final RestaurantRepository _restaurantRepository = RestaurantRepository();
+  final List<Restaurant> _restaurants = [];
+  bool _isLoadingMore = false;
+  bool _hasMoreRestaurants = true;
 
   final List<Map<String, dynamic>> _categories = const [
     {'name': 'All', 'icon': Icons.restaurant_rounded},
@@ -25,35 +30,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
     {'name': 'Drinks', 'icon': Icons.local_cafe_rounded},
   ];
 
-  final List<Map<String, dynamic>> _restaurants = const [
-    {
-      'name': 'Rose Garden Restaurant',
-      'tag': 'Burger • Fast Food • Western',
-      'rating': '4.8',
-      'time': '20-25 min',
-      'delivery': 'Free Delivery',
-      'color': Color(0xFFFFECE0),
-      'icon': Icons.lunch_dining_rounded,
-    },
-    {
-      'name': 'Luigi\'s Pizza House',
-      'tag': 'Pizza • Italian • Calzone',
-      'rating': '4.9',
-      'time': '15-20 min',
-      'delivery': 'Free Delivery',
-      'color': Color(0xFFFEF3C7),
-      'icon': Icons.local_pizza_rounded,
-    },
-    {
-      'name': 'Tokyo Ramen Kitchen',
-      'tag': 'Japanese • Ramen • Asian',
-      'rating': '4.7',
-      'time': '25-30 min',
-      'delivery': '\$1.99 Delivery',
-      'color': Color(0xFFE0F2FE),
-      'icon': Icons.ramen_dining_rounded,
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadNextRestaurantPage();
+  }
+
+  Future<void> _loadNextRestaurantPage() async {
+    if (_isLoadingMore || !_hasMoreRestaurants) return;
+    setState(() => _isLoadingMore = true);
+    final page = await _restaurantRepository.fetchPage(
+      page: _restaurants.length ~/ 3,
+    );
+    if (!mounted) return;
+    setState(() {
+      _restaurants.addAll(page.items);
+      _hasMoreRestaurants = page.hasMore;
+      _isLoadingMore = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -404,14 +399,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       width: 68,
                       height: 68,
                       decoration: BoxDecoration(
-                        color: r['color'] as Color,
+                        color: r.color,
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: Icon(
-                        r['icon'] as IconData,
-                        size: 34,
-                        color: AppColors.primary,
-                      ),
+                      child: Icon(r.icon, size: 34, color: AppColors.primary),
                     ),
                     const SizedBox(width: 14),
                     // Details
@@ -420,7 +411,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            r['name'] as String,
+                            r.name,
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w800,
@@ -429,7 +420,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            r['tag'] as String,
+                            r.tag,
                             style: const TextStyle(
                               fontSize: 12,
                               color: AppColors.textSecondary,
@@ -445,7 +436,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ),
                               const SizedBox(width: 3),
                               Text(
-                                r['rating'] as String,
+                                r.rating,
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
@@ -459,7 +450,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ),
                               const SizedBox(width: 3),
                               Text(
-                                r['time'] as String,
+                                r.time,
                                 style: const TextStyle(
                                   fontSize: 12,
                                   color: AppColors.textSecondary,
@@ -467,7 +458,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                r['delivery'] as String,
+                                r.delivery,
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -484,6 +475,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
               );
             },
           ),
+          if (_hasMoreRestaurants || _isLoadingMore) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _isLoadingMore ? null : _loadNextRestaurantPage,
+                icon: _isLoadingMore
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.expand_more_rounded),
+                label: Text(_isLoadingMore ? 'Loading...' : 'Load more'),
+              ),
+            ),
+          ],
           const SizedBox(height: 20),
         ],
       ),

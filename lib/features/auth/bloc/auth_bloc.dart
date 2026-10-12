@@ -12,6 +12,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc(this._authRepository) : super(const AuthState.unknown()) {
     on<AuthSubscriptionRequested>(_onSubscriptionRequested);
     on<AuthLoginRequested>(_onLoginRequested);
+    on<AuthGoogleLoginRequested>(_onGoogleLoginRequested);
     on<AuthRegistrationRequested>(_onRegistrationRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
     on<AuthNameUpdateRequested>(_onNameUpdateRequested);
@@ -65,6 +66,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         email: event.email,
         password: event.password,
       );
+    } on FirebaseAuthException catch (error) {
+      emit(
+        state.copyWith(
+          status: AuthStatus.failure,
+          errorMessage: _messageFor(error),
+        ),
+      );
+    }
+  }
+
+  Future<void> _onGoogleLoginRequested(
+    AuthGoogleLoginRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(state.copyWith(status: AuthStatus.submitting, clearError: true));
+    try {
+      await _authRepository.signInWithGoogle();
     } on FirebaseAuthException catch (error) {
       emit(
         state.copyWith(

@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthRepository {
   AuthRepository({FirebaseAuth? firebaseAuth})
-      : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
+    : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
 
   final FirebaseAuth _firebaseAuth;
 
@@ -18,6 +18,13 @@ class AuthRepository {
       email: email.trim(),
       password: password,
     );
+  }
+
+  Future<UserCredential> signInWithGoogle() {
+    final provider = GoogleAuthProvider()
+      ..addScope('email')
+      ..addScope('profile');
+    return _firebaseAuth.signInWithProvider(provider);
   }
 
   Future<UserCredential> register({
@@ -70,14 +77,13 @@ class AuthRepository {
     final user = _currentUser;
     final email = user.email;
     if (email == null) {
-      throw StateError('This account cannot be re-authenticated with a password.');
+      throw StateError(
+        'This account cannot be re-authenticated with a password.',
+      );
     }
 
     await user.reauthenticateWithCredential(
-      EmailAuthProvider.credential(
-        email: email,
-        password: currentPassword,
-      ),
+      EmailAuthProvider.credential(email: email, password: currentPassword),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:practise_app/common/config/routes.dart';
 import 'package:practise_app/common/theme/app_colors.dart';
 import 'package:practise_app/features/auth/bloc/auth_bloc.dart';
 
@@ -48,6 +49,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isSubmitting = context.select<AuthBloc, bool>(
+      (bloc) => bloc.state.status == AuthStatus.submitting,
+    );
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_isRegistering ? 'Create account' : 'Welcome back'),
@@ -55,7 +60,8 @@ class _LoginScreenState extends State<LoginScreen> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state.status == AuthStatus.authenticated) {
-            Navigator.of(context).pop();
+            Navigator.of(context)
+                .pushNamedAndRemoveUntil(AppRoutes.dashboard, (route) => false);
           }
           if (state.status == AuthStatus.failure &&
               state.errorMessage != null) {
@@ -130,6 +136,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         : Text(_isRegistering ? 'Create account' : 'Sign in'),
                   );
                 },
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: isSubmitting
+                    ? null
+                    : () => context.read<AuthBloc>().add(
+                        AuthGoogleLoginRequested(),
+                      ),
+                icon: const Icon(Icons.g_mobiledata_rounded, size: 28),
+                label: const Text('Continue with Google'),
               ),
               TextButton(
                 onPressed: () =>

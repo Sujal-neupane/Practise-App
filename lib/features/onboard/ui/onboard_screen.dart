@@ -84,10 +84,10 @@ class _OnboardScreenState extends State<OnboardScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Animated Dots Indicator (matching design with 4 dots)
+                  // Animated Dots Indicator
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(4, (index) {
+                    children: List.generate(_pages.length, (index) {
                       final isActive = _currentPage == index;
                       return AnimatedContainer(
                         duration: const Duration(milliseconds: 250),
